@@ -1,1 +1,10 @@
+## 1). Load CSV Files
+
+#converts the two CSV files (counts.csv and meta_data.csv) to data frames
+#returns the two data frames
+
+count_matrix_df <- read.csv("counts.csv")
+meta_data_df <- read.csv("meta_data.csv")
+
+## ------------------------------------------------------------
 
