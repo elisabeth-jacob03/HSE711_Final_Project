@@ -92,4 +92,51 @@ print(brca1_hist)
 
 ## ------------------------------------------------------------
 
+## 4). Create a Scatterplot
+#Select a second gene from the dataset. Create a scatter plot using ggplot2 to compare the count data of the two selected genes.
+
+#BRCA1 gene: ensembl gene ID: ENSG00000012048.23
+#BRCA2 gene: ensembl gene ID: ENSG00000139618.16
+
+
+#filter to only include row where ensembl gene ID = ENSG00000139618.16 (BRCA2 gene)
+#store this row as a data frame called brca2_df
+brca2_df <- as.data.frame(count_matrix_df[count_matrix_df[, 1] == "ENSG00000139618.16", -1])
+
+#transpose brca2_df so that all expression values for BRCA2 are in a single column
+#convert this transposed matrix into a data frame
+brca2_df_transpose <- as.data.frame(t(brca2_df))
+colnames(brca2_df_transpose) <- "Expression_Value_BRCA2" #sets column name to Expression Value
+
+#combines brca1_df_transpose & brca2_df_transpose into a single data frame
+brca_combined_df <- cbind(brca1_df_transpose, brca2_df_transpose)
+
+
+#create scatterplot to compare expression data for BRCA1 and BRCA2
+brca_scatter <- ggplot(brca_combined_df, aes(x = Expression_Value_BRCA1,
+                                             y = Expression_Value_BRCA2
+                                             )) +
+  geom_point(alpha = 0.4,
+               size = 3,
+             color = "#D0417E") +
+  labs(x = "BRCA1 Gene",
+       y = "BRCA2 Gene",
+       title = "Expression Values for BRCA1 Gene vs. BRCA2 Gene") +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5)
+  ) +
+  
+  scale_x_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000)) +
+  scale_y_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000))
+
+#save scatterplot as 5x7 pdf image
+ggsave("scatter.pdf", plot = brca_scatter, width = 7, height = 5, units = "in")
+
+print(brca_scatter)
+
+## ------------------------------------------------------------
+
 
