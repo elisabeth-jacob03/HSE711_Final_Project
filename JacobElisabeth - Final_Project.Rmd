@@ -1,0 +1,352 @@
+---
+title: "JacobElisabeth - Final_Project"
+output: pdf_document
+date: "2026-10-11"
+---
+
+## Load CSV Files
+
+```{r}
+#converts the two CSV files (counts.csv and meta_data.csv) to data frames
+#returns the two data frames
+
+count_matrix_df <- read.csv("counts.csv")
+meta_data_df <- read.csv("meta_data.csv")
+```
+
+## Generate Summary Statistics
+Using the count data from the selected gene, compute and report summary statistics, such as mean, median, standard deviation, minimum, and maximum.
+
+```{r cars}
+
+library(knitr)
+library(dplyr)
+
+#checks first column of count_matrix_df
+#returns row in count_matrix_df where the gene is ENSG00000012048.23 for BRCA1
+#returns row in count_matrix_df where the gene is ENSG00000139618.16 for BRCA2
+#uses as.numeric to makes sure all summary stats returned are numerics
+
+gene_row1 <- as.numeric(count_matrix_df[count_matrix_df[, 1] == 
+                                         "ENSG00000012048.23", -1])
+
+gene_row2 <- as.numeric(count_matrix_df[count_matrix_df[, 1] == 
+                                          "ENSG00000139618.16", -1])
+
+brca1_stats <- data.frame( #create a data frame with summary statistics for BRCA1
+  Gene = "BRCA1",
+  Min = min(gene_row1, na.rm = TRUE),
+  Mean = mean(gene_row1, na.rm = TRUE),
+  Median = median(gene_row1, na.rm = TRUE),
+  Max = max(gene_row1, na.rm = TRUE),
+  Sd = sd(gene_row1, na.rm = TRUE)
+)
+
+brca2_stats <- data.frame( #create a data frame with summary statistics for BRCA2
+  Gene = "BRCA2",
+  Min = min(gene_row2, na.rm = TRUE),
+  Mean = mean(gene_row2, na.rm = TRUE),
+  Median = median(gene_row2, na.rm = TRUE),
+  Max = max(gene_row2, na.rm = TRUE),
+  Sd = sd(gene_row2, na.rm = TRUE)
+)
+
+#combine BRCA1 and BRCA2 data frames into combined_stats data frame
+combined_stats <- bind_rows(brca1_stats, brca2_stats)
+
+#use knitr to convert combined_stats data frame into a table format
+knitr::kable(combined_stats, 
+             caption = "Summary Statistics", 
+             align = "lccccc")
+
+```
+
+## Create a Histogram
+Use ggplot2 to generate a histogram of the count data for the selected gene. This visualization should effectively display the distribution of the counts.
+
+```{r pressure, echo=TRUE}
+
+library(ggplot2)
+
+#filter to only include row where ensembl gene ID = ENSG00000012048.23 (BRCA1 gene)
+#store this row as a data frame called brca1_df
+brca1_df <- as.data.frame(count_matrix_df[count_matrix_df[, 1] == "ENSG00000012048.23", -1])
+
+#transpose brca1_df so that all expression values for BRCA1 are in a single column
+#convert this transposed matrix into a data frame
+brca1_df_transpose <- as.data.frame(t(brca1_df))
+colnames(brca1_df_transpose) <- "Expression_Value_BRCA1" #column name
+
+#create histogram showing frequency of expression values for BRCA1
+brca1_hist <- ggplot(brca1_df_transpose, aes(x = Expression_Value_BRCA1)) +
+  geom_histogram(binwidth = 250,
+                 fill="#F2A2B1", 
+                 color="#8B2252",
+                 alpha = 0.8) +
+  labs(
+    x = "Expression Value",
+    y = "Frequency",
+    title = "Distribution of Expression Values For BRCA1 Gene"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5)
+  )
+
+#save histogram as 5x7 pdf image
+ggsave("histogram.pdf", plot = brca1_hist, width = 7, height = 5, units = "in")
+
+print(brca1_hist)
+```
+
+## Create a Scatterplot
+Select a second gene from the dataset. Create a scatter plot using ggplot2 to compare the count data of the two selected genes.
+
+```{r}
+
+#BRCA1 gene: ensembl gene ID: ENSG00000012048.23
+#BRCA2 gene: ensembl gene ID: ENSG00000139618.16
+
+
+#filter to only include row where ensembl gene ID = ENSG00000139618.16 (BRCA2 gene)
+#store this row as a data frame called brca2_df
+brca2_df <- as.data.frame(count_matrix_df[count_matrix_df[, 1] == "ENSG00000139618.16", -1])
+
+#transpose brca2_df so that all expression values for BRCA2 are in a single column
+#convert this transposed matrix into a data frame
+brca2_df_transpose <- as.data.frame(t(brca2_df))
+colnames(brca2_df_transpose) <- "Expression_Value_BRCA2" #sets column name to Expression Value
+
+#combines brca1_df_transpose & brca2_df_transpose into a single data frame
+brca_combined_df <- cbind(brca1_df_transpose, brca2_df_transpose)
+
+
+#create scatterplot to compare expression data for BRCA1 and BRCA2
+brca_scatter <- ggplot(brca_combined_df, aes(x = Expression_Value_BRCA1,
+                                             y = Expression_Value_BRCA2
+                                             )) +
+  geom_point(alpha = 0.4,
+               size = 3,
+             color = "#D0417E") +
+  labs(x = "BRCA1 Gene",
+       y = "BRCA2 Gene",
+       title = "Expression Values for BRCA1 Gene vs. BRCA2 Gene") +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5)
+  ) +
+  
+  scale_x_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000)) +
+  scale_y_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000))
+
+#save scatterplot as 5x7 pdf image
+ggsave("scatter.pdf", plot = brca_scatter, width = 7, height = 5, units = "in")
+
+print(brca_scatter)
+
+```
+
+## Create a Violin Plot
+Select one covariate from your metadata. Using the count data from the first gene and the selected covariate, generate a violin plot that illustrates the distribution of count data based on the covariate. For example, if you choose Updated September 2026 “primary_diagnosis”, your plot should display a violin plot for each level in “primary_diagnosis”.
+
+```{r}
+#gene is BRCA1
+#chosen covariate is tissue_type
+
+
+#combine BRCA1 expression values and tissue_type columns into a single data frame
+brca1_tissue_df <- data.frame(
+  brca1_df_transpose,
+  Tissue_Type = meta_data_df$tissue_type
+)
+
+
+#create violin plots to illustrate distribution of expression values based on covariate
+#include boxplot inside of violin plots
+brca1_violin <- ggplot(brca1_tissue_df, aes(x = Tissue_Type,
+                                                y = Expression_Value_BRCA1,
+                                                fill = Tissue_Type)) +
+  geom_violin(trim = TRUE) +
+  geom_boxplot(width = 0.2, fill = "white", color = "black", alpha = 1) +
+  labs(
+    x = "Tissue Type",
+    y = "Expression Value",
+    fill = "Tissue Type",
+    title = "BRCA1 Expression Values By Tissue Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5),
+    legend.text = element_text(size = 12, color = "black"),
+    legend.title = element_text(size = 14, color = "black")
+  ) +
+  
+  
+  scale_fill_manual(values=c("#F2A2B1", "#CD5555")) +
+  scale_y_log10(limits = c(10, 10000))
+
+#save violin plots as 5x7 pdf image
+ggsave("violin.pdf", plot = brca1_violin, width = 7, height = 5, units = "in")
+
+print(brca1_violin)
+
+```
+
+## Heatmap Analysis
+i) Select 10 genes: Choose a set of 10 different genes from the count matrix for your heatmap.
+ii) Generate a Heatmap: Use the ComplexHeatmap package in R to create a heatmap of the count data for the selected genes.
+iii) Add an Annotation Bar: Include an annotation bar reflecting your chosen covariate for further context and interpretation of the data.
+
+```{r}
+
+library(ComplexHeatmap)
+
+#TEN CHOSEN GENES:
+#1). BRCA1 - ENSG00000012048.23 (row 311)
+#2). BRCA2 - ENSG00000139618.16 (row 7848)
+#3). TP53 - ENSG00000141510.18 (row 8125)
+#4). ERBB2 (HER2) - ENSG00000141736.14 (row 8163)
+#5). PTEN - ENSG00000171862.11 (row 13164)
+#6). CHEK2 - ENSG00000183765.23 (row 15574)
+#7). ATM - ENSG00000149311.19 (row 9196)
+#8). PALB2 - ENSG00000083093.10 (row 1585)
+#9). CDH1 - ENSG00000039068.19 (row 556)
+#10). STK11 - ENSG00000118046.16 (row 4772)
+
+#read CSV files
+count_matrix_df2 <- read.csv("counts.csv", row.names = 1, check.names = FALSE)
+meta_data_df2 <- read.csv("meta_data.csv", row.names = 1, check.names = FALSE)
+
+
+#vector with ensembl IDs of each gene
+ten_genes <- c("ENSG00000012048.23",
+               "ENSG00000139618.16",
+               "ENSG00000141510.18",
+               "ENSG00000141736.14",
+               "ENSG00000171862.11",
+               "ENSG00000183765.23",
+               "ENSG00000149311.19",
+               "ENSG00000083093.10",
+               "ENSG00000039068.19",
+               "ENSG00000118046.16")
+
+#vector to set ensembl IDs to common name for each gene
+gene_names <- c(
+  "ENSG00000012048.23" = "BRCA1",
+  "ENSG00000139618.16" = "BRCA2",
+  "ENSG00000141510.18" = "TP53",
+  "ENSG00000141736.14" = "ERBB2 (HER2)",
+  "ENSG00000171862.11" = "PTEN",
+  "ENSG00000183765.23" = "CHEK2",
+  "ENSG00000149311.19" = "ATM",
+  "ENSG00000083093.10" = "PALB2",
+  "ENSG00000039068.19" = "CDH1",
+  "ENSG00000118046.16" = "STK11"
+)
+
+#obtain the 10 genes from count_matrix_df2
+counts_subset <- count_matrix_df2[ten_genes, ]
+
+counts_subset_log <- log1p(counts_subset) #use log for count
+
+counts_scaled <- t(scale(t(as.matrix(counts_subset_log)))) #z-scores
+
+#make sure metadata rows match order of count matrix columns
+meta_data_df2 <- meta_data_df2[colnames(counts_scaled), , drop = FALSE]
+
+#order by tissue type, separate into two categories...Tumor and Normal
+ordered_sample <- order(meta_data_df2$tissue_type)
+
+#chosen covariate...tissue type
+column_ha <- HeatmapAnnotation(
+  Tissue_Type = meta_data_df2$tissue_type,
+  col = list(
+    Tissue_Type = c(Normal = "#F2A2B1", Tumor = "#CD5555")
+  ),
+  annotation_name_gp = gpar(fontsize = 14, fontface = "bold"), 
+  annotation_legend_param = list(
+    Tissue_Type = list(
+      title_gp = gpar(fontsize = 14, fontface = "bold", color = "black"), 
+      labels_gp = gpar(fontsize = 12, color = "black")                   
+    )
+  )
+)
+
+#heatmap
+Heatmap(
+  counts_scaled, #scale matrix with z-scores
+  name = "Z-score",
+  top_annotation = column_ha,
+  show_row_names = TRUE,
+  row_labels = gene_names[rownames(counts_subset_log)], #matrix row names
+  show_column_names = FALSE,
+  cluster_columns = FALSE,
+  column_order = ordered_sample, #sort columns based on tissue_type
+  cluster_rows = TRUE,
+  row_names_gp = gpar(fontsize = 12, color = "black"),
+  column_title = "Samples",
+  column_title_gp = gpar(fontsize = 14, color = "black"),
+  row_title = "Genes",
+  row_title_gp = gpar(fontsize = 14, color = "black"),
+  
+  heatmap_legend_param = list(
+      title_gp = gpar(fontsize = 14, fontface = "bold", color = "black"), 
+      labels_gp = gpar(fontsize = 12, color = "black")
+  )
+)
+```
+
+## Generate an Additional Plot
+
+Take some time to Google around and generate an additional new plot type not yet
+included in your report. This plot can be one we learned about in class.
+
+Chosen Plot: Hexbin Plot comparing BRCA1 and BRCA2 genes by sample density
+
+```{r}
+
+#create hexbin plot to compare expression data for BRCA1 and BRCA2
+#hexbin plot is a type of 2D density plot
+#alternative visualization to scatterplot to show correlation between the two genes
+#hexbin plot helps to address the issue of overplotting found in scatterplots
+
+
+#create hexbin plot with ggplot2 and geom_hex()
+brca_hexbin <- ggplot(brca_combined_df, aes(x = Expression_Value_BRCA1,
+                                            y = Expression_Value_BRCA2
+                                            ))+
+  geom_hex() +
+  stat_binhex(bins=15, color=c("#D7DADB"), linewidth = 0.2) +
+  labs(x = "BRCA1 Gene",
+       y = "BRCA2 Gene",
+       fill = "Sample Count",
+       title = "Expression Values for BRCA1 Gene vs. BRCA2 Gene") +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5),
+    legend.text = element_text(size = 12, color = "black"),
+    legend.title = element_text(size = 14, color = "black")
+  ) +
+  
+  scale_fill_gradient(low = "#5E3D43", high = "#F2A2B1") +
+  
+  scale_x_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000)) +
+  scale_y_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000)) +
+  
+  coord_cartesian(clip = "on")
+
+#save hexbin plot as 5x7 pdf image
+ggsave("hexbin.pdf", plot = brca_hexbin, width = 7, height = 5, units = "in")
+
+print(brca_hexbin)
+
+```
+
