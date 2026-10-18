@@ -288,3 +288,47 @@ Heatmap(
 )
 
 ## ------------------------------------------------------------
+
+## 7). Generate an Additional Plot
+
+#Take some time to Google around and generate an additional new plot type not yet
+#included in your report. This plot can be one we learned about in class.
+
+Chosen Plot: Hexbin Plot comparing BRCA1 and BRCA2 genes by sample density
+
+#create hexbin plot to compare expression data for BRCA1 and BRCA2
+#hexbin plot is a type of 2D density plot
+#alternative visualization to scatterplot to show correlation between the two genes
+#hexbin plot helps to address the issue of overplotting found in scatterplots
+
+
+#create hexbin plot with ggplot2 and geom_hex()
+brca_hexbin <- ggplot(brca_combined_df, aes(x = Expression_Value_BRCA1,
+                                            y = Expression_Value_BRCA2
+                                            ))+
+  geom_hex() +
+  stat_binhex(bins=15, color=c("#D7DADB"), linewidth = 0.2) +
+  labs(x = "BRCA1 Gene",
+       y = "BRCA2 Gene",
+       fill = "Sample Count",
+       title = "Expression Values for BRCA1 Gene vs. BRCA2 Gene") +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5),
+    legend.text = element_text(size = 12, color = "black"),
+    legend.title = element_text(size = 14, color = "black")
+  ) +
+  
+  scale_fill_gradient(low = "#5E3D43", high = "#F2A2B1") +
+  
+  scale_x_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000)) +
+  scale_y_log10(breaks = c(10, 30, 100, 300, 1000, 3000, 10000), limits = c(10, 10000)) +
+  
+  coord_cartesian(clip = "on")
+
+#save hexbin plot as 5x7 pdf image
+ggsave("hexbin.pdf", plot = brca_hexbin, width = 7, height = 5, units = "in")
+
+print(brca_hexbin)
