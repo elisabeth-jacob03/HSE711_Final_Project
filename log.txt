@@ -186,3 +186,105 @@ print(brca1_violin)
 
 ## ------------------------------------------------------------
 
+## 6). Heatmap Analysis
+#i) Select 10 genes: Choose a set of 10 different genes from the count matrix for your heatmap.
+#ii) Generate a Heatmap: Use the ComplexHeatmap package in R to create a heatmap of the count data for the selected genes.
+#iii) Add an Annotation Bar: Include an annotation bar reflecting your chosen covariate for further context and interpretation of the data.
+
+library(ComplexHeatmap)
+
+#TEN CHOSEN GENES:
+#1). BRCA1 - ENSG00000012048.23 (row 311)
+#2). BRCA2 - ENSG00000139618.16 (row 7848)
+#3). TP53 - ENSG00000141510.18 (row 8125)
+#4). ERBB2 (HER2) - ENSG00000141736.14 (row 8163)
+#5). PTEN - ENSG00000171862.11 (row 13164)
+#6). CHEK2 - ENSG00000183765.23 (row 15574)
+#7). ATM - ENSG00000149311.19 (row 9196)
+#8). PALB2 - ENSG00000083093.10 (row 1585)
+#9). CDH1 - ENSG00000039068.19 (row 556)
+#10). STK11 - ENSG00000118046.16 (row 4772)
+
+#read CSV files
+count_matrix_df2 <- read.csv("counts.csv", row.names = 1, check.names = FALSE)
+meta_data_df2 <- read.csv("meta_data.csv", row.names = 1, check.names = FALSE)
+
+
+#vector with ensembl IDs of each gene
+ten_genes <- c("ENSG00000012048.23",
+               "ENSG00000139618.16",
+               "ENSG00000141510.18",
+               "ENSG00000141736.14",
+               "ENSG00000171862.11",
+               "ENSG00000183765.23",
+               "ENSG00000149311.19",
+               "ENSG00000083093.10",
+               "ENSG00000039068.19",
+               "ENSG00000118046.16")
+
+#vector to set ensembl IDs to common name for each gene
+gene_names <- c(
+  "ENSG00000012048.23" = "BRCA1",
+  "ENSG00000139618.16" = "BRCA2",
+  "ENSG00000141510.18" = "TP53",
+  "ENSG00000141736.14" = "ERBB2 (HER2)",
+  "ENSG00000171862.11" = "PTEN",
+  "ENSG00000183765.23" = "CHEK2",
+  "ENSG00000149311.19" = "ATM",
+  "ENSG00000083093.10" = "PALB2",
+  "ENSG00000039068.19" = "CDH1",
+  "ENSG00000118046.16" = "STK11"
+)
+
+#obtain the 10 genes from count_matrix_df2
+counts_subset <- count_matrix_df2[ten_genes, ]
+
+counts_subset_log <- log1p(counts_subset) #use log for count
+
+counts_scaled <- t(scale(t(as.matrix(counts_subset_log)))) #z-scores
+
+#make sure metadata rows match order of count matrix columns
+meta_data_df2 <- meta_data_df2[colnames(counts_scaled), , drop = FALSE]
+
+#order by tissue type, separate into two categories...Tumor and Normal
+ordered_sample <- order(meta_data_df2$tissue_type)
+
+#chosen covariate...tissue type
+column_ha <- HeatmapAnnotation(
+  Tissue_Type = meta_data_df2$tissue_type,
+  col = list(
+    Tissue_Type = c(Normal = "#F2A2B1", Tumor = "#CD5555")
+  ),
+  annotation_name_gp = gpar(fontsize = 14, fontface = "bold"), 
+  annotation_legend_param = list(
+    Tissue_Type = list(
+      title_gp = gpar(fontsize = 14, fontface = "bold", color = "black"), 
+      labels_gp = gpar(fontsize = 12, color = "black")                   
+    )
+  )
+)
+
+#heatmap
+Heatmap(
+  counts_scaled, #scale matrix with z-scores
+  name = "Z-score",
+  top_annotation = column_ha,
+  show_row_names = TRUE,
+  row_labels = gene_names[rownames(counts_subset_log)], #matrix row names
+  show_column_names = FALSE,
+  cluster_columns = FALSE,
+  column_order = ordered_sample, #sort columns based on tissue_type
+  cluster_rows = TRUE,
+  row_names_gp = gpar(fontsize = 12, color = "black"),
+  column_title = "Samples",
+  column_title_gp = gpar(fontsize = 14, color = "black"),
+  row_title = "Genes",
+  row_title_gp = gpar(fontsize = 14, color = "black"),
+  
+  heatmap_legend_param = list(
+      title_gp = gpar(fontsize = 14, fontface = "bold", color = "black"), 
+      labels_gp = gpar(fontsize = 12, color = "black")
+  )
+)
+
+## ------------------------------------------------------------
