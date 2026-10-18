@@ -52,3 +52,44 @@ knitr::kable(combined_stats,
              align = "lccccc")
 
 ## ------------------------------------------------------------
+
+## 3). Create a Histogram
+#Use ggplot2 to generate a histogram of the count data for the selected gene. This visualization should effectively display the distribution of the counts.
+
+library(ggplot2)
+
+#filter to only include row where ensembl gene ID = ENSG00000012048.23 (BRCA1 gene)
+#store this row as a data frame called brca1_df
+brca1_df <- as.data.frame(count_matrix_df[count_matrix_df[, 1] == "ENSG00000012048.23", -1])
+
+#transpose brca1_df so that all expression values for BRCA1 are in a single column
+#convert this transposed matrix into a data frame
+brca1_df_transpose <- as.data.frame(t(brca1_df))
+colnames(brca1_df_transpose) <- "Expression_Value_BRCA1" #column name
+
+#create histogram showing frequency of expression values for BRCA1
+brca1_hist <- ggplot(brca1_df_transpose, aes(x = Expression_Value_BRCA1)) +
+  geom_histogram(binwidth = 250,
+                 fill="#F2A2B1", 
+                 color="#8B2252",
+                 alpha = 0.8) +
+  labs(
+    x = "Expression Value",
+    y = "Frequency",
+    title = "Distribution of Expression Values For BRCA1 Gene"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5)
+  )
+
+#save histogram as 5x7 pdf image
+ggsave("histogram.pdf", plot = brca1_hist, width = 7, height = 5, units = "in")
+
+print(brca1_hist)
+
+## ------------------------------------------------------------
+
+
