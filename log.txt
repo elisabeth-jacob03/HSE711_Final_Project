@@ -8,3 +8,47 @@ meta_data_df <- read.csv("meta_data.csv")
 
 ## ------------------------------------------------------------
 
+## 2). Generate Summary Statistics
+#Using the count data from the selected gene, compute and report summary statistics, such as mean, median, standard deviation, #minimum, and maximum.
+
+library(knitr)
+library(dplyr)
+
+#checks first column of count_matrix_df
+#returns row in count_matrix_df where the gene is ENSG00000012048.23 for BRCA1
+#returns row in count_matrix_df where the gene is ENSG00000139618.16 for BRCA2
+#uses as.numeric to makes sure all summary stats returned are numerics
+
+gene_row1 <- as.numeric(count_matrix_df[count_matrix_df[, 1] == 
+                                         "ENSG00000012048.23", -1])
+
+gene_row2 <- as.numeric(count_matrix_df[count_matrix_df[, 1] == 
+                                          "ENSG00000139618.16", -1])
+
+brca1_stats <- data.frame( #create a data frame with summary statistics for BRCA1
+  Gene = "BRCA1",
+  Min = min(gene_row1, na.rm = TRUE),
+  Mean = mean(gene_row1, na.rm = TRUE),
+  Median = median(gene_row1, na.rm = TRUE),
+  Max = max(gene_row1, na.rm = TRUE),
+  Sd = sd(gene_row1, na.rm = TRUE)
+)
+
+brca2_stats <- data.frame( #create a data frame with summary statistics for BRCA2
+  Gene = "BRCA2",
+  Min = min(gene_row2, na.rm = TRUE),
+  Mean = mean(gene_row2, na.rm = TRUE),
+  Median = median(gene_row2, na.rm = TRUE),
+  Max = max(gene_row2, na.rm = TRUE),
+  Sd = sd(gene_row2, na.rm = TRUE)
+)
+
+#combine BRCA1 and BRCA2 data frames into combined_stats data frame
+combined_stats <- bind_rows(brca1_stats, brca2_stats)
+
+#use knitr to convert combined_stats data frame into a table format
+knitr::kable(combined_stats, 
+             caption = "Summary Statistics", 
+             align = "lccccc")
+
+## ------------------------------------------------------------
