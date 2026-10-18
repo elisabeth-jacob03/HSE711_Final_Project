@@ -139,4 +139,50 @@ print(brca_scatter)
 
 ## ------------------------------------------------------------
 
+## 5). Create a Violin Plot
+#Select one covariate from your metadata. Using the count data from the first gene and the selected covariate, generate a violin plot that illustrates the distribution of count data based on the covariate. For example, if you choose Updated September 2026 “primary_diagnosis”, your plot should display a violin plot for each level in “primary_diagnosis”.
+
+
+#gene is BRCA1
+#chosen covariate is tissue_type
+
+#combine BRCA1 expression values and tissue_type columns into a single data frame
+brca1_tissue_df <- data.frame(
+  brca1_df_transpose,
+  Tissue_Type = meta_data_df$tissue_type
+)
+
+
+#create violin plots to illustrate distribution of expression values based on covariate
+#include boxplot inside of violin plots
+brca1_violin <- ggplot(brca1_tissue_df, aes(x = Tissue_Type,
+                                                y = Expression_Value_BRCA1,
+                                                fill = Tissue_Type)) +
+  geom_violin(trim = TRUE) +
+  geom_boxplot(width = 0.2, fill = "white", color = "black", alpha = 1) +
+  labs(
+    x = "Tissue Type",
+    y = "Expression Value",
+    fill = "Tissue Type",
+    title = "BRCA1 Expression Values By Tissue Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 14, color = "black", hjust = 0.5),
+    legend.text = element_text(size = 12, color = "black"),
+    legend.title = element_text(size = 14, color = "black")
+  ) +
+  
+  
+  scale_fill_manual(values=c("#F2A2B1", "#CD5555")) +
+  scale_y_log10(limits = c(10, 10000))
+
+#save violin plots as 5x7 pdf image
+ggsave("violin.pdf", plot = brca1_violin, width = 7, height = 5, units = "in")
+
+print(brca1_violin)
+
+## ------------------------------------------------------------
 
